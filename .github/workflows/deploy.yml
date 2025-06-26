@@ -1,0 +1,49 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      LAMBDA_ZIP: lambda.zip
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    ### BACKEND DEPLOYMENT ###
+    - name: Install & Zip Backend
+      run: |
+        cd backend
+        npm install
+        zip -r ../$LAMBDA_ZIP .
+
+    - name: Deploy to Lambda
+      uses: appleboy/lambda-action@master
+      with:
+        function_name: ${{ secrets.LAMBDA_FUNCTION_NAME }}
+        region: ap-south-1
+        zip_file: lambda.zip
+        access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    ### FRONTEND DEPLOYMENT ###
+    - name: Install & Build Frontend
+      run: |
+        cd frontend
+        npm install
+        cp .env.production .env
+        npm run build
+
+    - name: Deploy to S3
+      run: |
+        aws s3 sync frontend/dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    
