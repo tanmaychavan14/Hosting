@@ -22,22 +22,21 @@ jobs:
         npm install
         zip -r ../$LAMBDA_ZIP .
 
-   - name: Deploy to Lambda
-  uses: appleboy/lambda-action@master
-  with:
-    function_name: ${{ secrets.LAMBDA_FUNCTION_NAME }}
-    aws_region: ap-south-1
-    aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    zip_file: lambda.zip
-
+    - name: Deploy to Lambda
+      uses: appleboy/lambda-action@master
+      with:
+        function_name: ${{ secrets.LAMBDA_FUNCTION_NAME }}
+        aws_region: ap-south-1
+        aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        zip_file: lambda.zip
 
     ### FRONTEND DEPLOYMENT ###
     - name: Install & Build Frontend
       run: |
         cd frontend
         npm install
-        cp .env.production .env
+        echo "VITE_API_BASE_URL=${{ secrets.API_BASE_URL }}" > .env.production
         npm run build
 
     - name: Deploy to S3
@@ -46,5 +45,3 @@ jobs:
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-    
